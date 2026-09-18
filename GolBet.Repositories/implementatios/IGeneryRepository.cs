@@ -1,51 +1,58 @@
-﻿using GolBet.Entities.common1;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// GolBet.Repositories/Implementations/GenericRepository.cs
+using GolBet.Entities.common1;
+using GolBet.Repositories.Data;
+using GolBet.Repositories.interfases;
+using Microsoft.EntityFrameworkCore;
 
-namespace GolBet.Repositories.implementatios
+namespace GolBet.Repositories.Implementations;
+
+public class GenericRepository<T> : IGenericRepository<T> where T : AuditableEntity
 {
+    protected readonly AppDbContext _context;
+    protected readonly DbSet<T> _dbSet;
 
-
-    // GolBet.Repositories/Interfaces/IGenericRepository.cs 
-
-    using GolBet.Entities.common;
-
-
-
-    namespace GolBet.Repositories.Interfaces;
-
-
-
-    /// <summary> 
-
-    /// Generic data-access contract for all domain entities. 
-
-    /// Specific queries live in entity-specific repositories. 
-
-    /// </summary> 
-
-    public interface IGenericRepository<T> where T : AuditableEntity
-
+    public GenericRepository(AppDbContext context)
     {
+        _context = context;
+        _dbSet = context.Set<T>();   // resolves the DbSet for T at runtime
+    }
 
-        // ---- Queries ---- 
+    // ---- Queries ----
 
-        Task<IEnumerable<T>> GetAllAsync(bool includeInactive = false);
+    public virtual async Task<IEnumerable<T>> GetAllAsync(bool includeInactive = false)
+    {
+        IQueryable<T> query = _dbSet.AsNoTracking();
 
-        Task<T?> GetByIdAsync(int id);
+        if (!includeInactive)
+            query = query.Where(e => e.IsActive);
 
+        return await query.ToListAsync();
+    }
 
+    public virtual async Task<T?> GetByIdAsync(int id)
+        => await _dbSet.FindAsync(id);
 
-        // ---- Commands ---- 
+    // ---- Commands ----
 
-        Task<T> AddAsync(T entity);
+    public async Task<T> AddAsync(T entity)
+    {
+        await _dbSet.AddAsync(entity);
+        await _context.SaveChangesAsync();   // audit stamps applied here (Module 2)
+        return entity;
+    }
 
-        Task UpdateAsync(T entity);
+    public async Task UpdateAsync(T entity)
+    {
+        _dbSet.Update(entity);
+        await _context.SaveChangesAsync();
+    }
 
-        Task DeactivateAsync(int id);   // logical delete: IsActive = false 
+    public async Task DeactivateAsync(int id)
+    {
+        var entity = await _dbSet.FindAsync(id);
+        if (entity is null) return;
 
+        entity.IsActive = false;             // logical delete
+        await _context.SaveChangesAsync();   // tracked as Modified -> gets ModifiedDate
     }
 }
