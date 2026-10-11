@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace GolBet.Repositories.Data.Migrations
+namespace GolBet.Repositories.Migrations
 {
-    public partial class InitialCreate : Migration
+    /// <inheritdoc />
+    public partial class InitialDomain : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -15,7 +17,7 @@ namespace GolBet.Repositories.Data.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false, collation: "SQL_Latin1_General_CP1_CI_AI"),
                     City = table.Column<string>(type: "nvarchar(60)", maxLength: 60, nullable: false),
                     CrestUrl = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -90,10 +92,9 @@ namespace GolBet.Repositories.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Teams_Name",
-                table: "Teams",
-                column: "Name",
-                unique: true);
+                name: "IX_Bets_MatchId",
+                table: "Bets",
+                column: "MatchId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Matches_AwayTeamId",
@@ -106,11 +107,13 @@ namespace GolBet.Repositories.Data.Migrations
                 column: "HomeTeamId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Bets_MatchId",
-                table: "Bets",
-                column: "MatchId");
+                name: "IX_Teams_Name",
+                table: "Teams",
+                column: "Name",
+                unique: true);
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

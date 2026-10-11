@@ -3,6 +3,10 @@ using GolBet.Repositories.Implementations;
 using GolBet.Repositories.Interfaces;
 using GolBet.Repositories.interfases;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+var culture = new CultureInfo("es-CO");
+CultureInfo.DefaultThreadCurrentCulture = culture;
+CultureInfo.DefaultThreadCurrentUICulture = culture;
 
 var builder = WebApplication.CreateBuilder(args);
 
